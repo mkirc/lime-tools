@@ -1,0 +1,9 @@
+59c59
+< CCFLAGS += -O3 -falign-loops=16 -fno-strict-aliasing
+---
+> CCFLAGS += -O3 -falign-loops=16 -fno-strict-aliasing -g
+74,75c74
+<   CCFLAGS += -DH5_NO_DEPRECATED_SYMBOLS
+<   LDFLAGS += -lhdf5_hl -lhdf5 -lz
+---
+>   LDFLAGS += -lhdf5_serial_hl -lhdf5_serial -lz

@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  lime:
+    build: .
+    image: lime-dev
+    container_name: lime-dev
+    hostname: lime-dev
+  pylime:
+    build: .
+    image: pylime-dev
+    container_name: pylime-dev
+    hostname: pylime-dev

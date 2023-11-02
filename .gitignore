@@ -1,0 +1,33 @@
+# Ignore Coredumps
+**/core
+# Ignore MacOS files
+.DS_Store
+
+# Ignore example files
+**/example/*.vtk
+**/example/*.pop
+**/example/*.fits*
+**/example/lime_*.x
+**/example/*.dat
+**/example/*_archive
+**/example/vlog.txt
+
+# Ignore html doc files
+doc/*.html
+
+# ignore python venv
+**/venv
+**/.venv
+
+# pycache
+**/__pycache__/
+
+# swp files
+**.swp
+
+# compressed artifacts
+**.zip
+**.tar*
+
+# vanilla lime dir
+lime-1.9.5/
