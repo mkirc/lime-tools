@@ -1,5 +1,0 @@
-103c103,104
-<     VERBOSE=$verbose # USEHDF5="yes"
----
->     VERBOSE=$verbose USEHDF5="yes"
-> # USEHDF5="yes"

@@ -2,32 +2,35 @@
 
 _base_path="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-DEFS_FILE=/lime/Makefile.defs
-CONFIGURE=/lime-tools/configure
-LIME_DIR=/lime
-DEFAULT_MODEL=/model
+readonly LIME_DIR=/lime
+readonly DEFS_FILE="$LIME_DIR"/Makefile.defs
+readonly CONFIGURE="$LIME_DIR"/configure
+readonly DEFAULT_MODEL=/model
 
 trap cleanup SIGINT
 trap cleanup SIGTERM
 trap cleanup ERR
 
 cleanup() {
+    # lime tries to make -s limeclean after compilation,
+    # but this also handles a user hitting CTRL-C
+    # mid-compilation
     for f in "$DEFAULT_MODEL"/lime_*.x; do
         [[ -e "$f" ]] && rm "$f"
     done
 
-    cp "$_base_path"/Makefile.bak "$LIME_DIR"/Makefile \
-        && rm "$_base_path"/Makefile.bak
-    cp "$_base_path"/configure.bak "$LIME_DIR"/configure \
-        && rm "$_base_path"/configure.bak
+    if [[ -e "$_base_path"/Makefile.bak ]]; then
+        cp "$_base_path"/Makefile.bak "$LIME_DIR"/Makefile \
+            && rm "$_base_path"/Makefile.bak
+    fi
 }
 
 run_configure() {
     # if Makefile.defs does not exist or is older than ./configure,
     # run ./configure first.
     if [[ ! -e "$DEFS_FILE" ]] || [[ "$DEFS_FILE" -ot "$CONFIGURE"  ]]; then
-        bash "$CONFIGURE" "$DEFS_FILE"
-        return $!
+        bash "$CONFIGURE"
+        return $?
     fi
     return 0
 }
@@ -37,23 +40,23 @@ backup_makefile() {
         && cp "$LIME_DIR"/Makefile "$_base_path"/Makefile.bak
 }
 
-patch_makefile() {
-    # if backup is more recent than Makefile, patch Makefile for
-    # correct libraries and compilation flags
-    if [[ "$_base_path"/Makefile.bak -nt "$LIME_DIR"/Makefile ]]; then
-        sed -i 's/-lhdf5/-lhdf5_serial/g' "$LIME_DIR"/Makefile
-        sed -i '/CCFLAGS += -DH5_NO_DEPRECATED_SYMBOLS/d' "$LIME_DIR"/Makefile
-    fi
-}
+# patch_makefile() {
+#     # if backup is more recent than Makefile, patch Makefile for
+#     # correct libraries and compilation flags
+#     if [[ "$_base_path"/Makefile.bak -nt "$LIME_DIR"/Makefile ]]; then
+#         sed -i 's/-lhdf5/-lhdf5_serial/g' "$LIME_DIR"/Makefile
+#         sed -i '/CCFLAGS += -DH5_NO_DEPRECATED_SYMBOLS/d' "$LIME_DIR"/Makefile
+#     fi
+# }
 
 if [[ -x "$LIME_DIR"/lime ]]; then
-    backup_makefile
-    patch_makefile
+    # backup_makefile
+    # patch_makefile
     run_configure
 
-    if [[ $# -eq 0 ]]; then
-        cd "$DEFAULT_MODEL" || exit
-        bash "$LIME_DIR"/lime -n ./model.c "$@"
+    if [[ $# -eq 0 ]]; then # no command line options
+        cd "$DEFAULT_MODEL" || exit # test if default model dir exists
+        bash "$LIME_DIR"/lime -n "$@" ./model.c
         LIME_EXIT_STATUS=$?
     else
         bash "$LIME_DIR"/lime "$@"
