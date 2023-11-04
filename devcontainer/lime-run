@@ -40,7 +40,7 @@ if [[ -x "$LIME_DIR"/lime ]]; then
 
     if [[ $# -eq 0 ]]; then # no command line options
         cd "$DEFAULT_MODEL" || exit # test if default model dir exists
-        bash "$LIME_DIR"/lime -n "$@" ./model.c
+        bash "$LIME_DIR"/lime --no-ncurses "$@" ./model.c
         LIME_EXIT_STATUS=$?
     else
         bash "$LIME_DIR"/lime "$@"
