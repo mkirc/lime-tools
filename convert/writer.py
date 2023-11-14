@@ -1,5 +1,6 @@
 import h5py
-from helper import setupLIMEStage1
+import numpy as np
+from helper import setupLIMEStage1, centerAxis
 
 
 class FileWriter:
@@ -16,14 +17,34 @@ class LIMEWriter(FileWriter):
         self.nBlocks = nBlocks
 
     def write(self, blocks):
-        with h5py.File(f"{filePath}", "w") as outFile:
-            x1, x2, x3 = setupLIMEStage1(outFile, self.nBlocks)
+        with h5py.File(f"{self.filePath}", "w") as outFile:
+            radius =  2.7002512991143854E18
+            minscale = 6.750628247785964E17
+
+            x1, x2, x3, sinks = setupLIMEStage1(outFile, self.nBlocks, radius, minscale)
 
             i = 0
             for block in blocks:
+                block.gridpoints[:, 0] = centerAxis(block.gridpoints[:, 0])
+                block.gridpoints[:, 1] = centerAxis(block.gridpoints[:, 1])
+                block.gridpoints[:, 2] = centerAxis(block.gridpoints[:, 2])
+                
                 x1[i * 512 : (i + 1) * 512] = block.gridpoints[:, 0]
                 x2[i * 512 : (i + 1) * 512] = block.gridpoints[:, 1]
                 x3[i * 512 : (i + 1) * 512] = block.gridpoints[:, 2]
+
+                sinkpoints = np.take(block.gridpoints, np.nonzero(block.hullpoints), 0)[0]
+
+                num_sinkpoints = len(sinkpoints)
+                # num_innerpoints = len(block.gridpoints) - num_sinkpoints
+
+                x1[(i+1) * 512 : (i+1)*512 + num_sinkpoints] = sinkpoints[:, 0]
+                x2[(i+1) * 512 : (i+1)*512 + num_sinkpoints] = sinkpoints[:, 1]
+                x3[(i+1) * 512 : (i+1)*512 + num_sinkpoints] = sinkpoints[:, 2]
+
+                sinks[i * 512 : (i + 1) * 512] = [0 for i in range(512)]
+                sinks[(i+1) * 512 :(i+1)*512 + num_sinkpoints ] = [1 for i in range(num_sinkpoints)]
+
                 i += 1
                 del block
 

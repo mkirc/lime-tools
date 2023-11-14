@@ -50,6 +50,7 @@ class FlashBlock:
         self._Ix, self._Iy, self._Iz = indices
 
         self.gridpoints = self.gridpointsForBoundingbox(bb)
+        self.hullpoints = self.hullpoints()
         self.temperatures = self.temperatures(temp)
         self.dusttemperatures = self.dusttemperatures(tempdust)
         self.densities = self.densities(dens)
@@ -69,6 +70,21 @@ class FlashBlock:
             .reshape(3, -1)
             .T
         )
+
+    def hullpoints(self):
+        """hullpoint has either a index of 0 or n[xyz]b. returns bitmask for gridpoints,
+        1 indicating hullpoint, 0 indicating inner point"""
+        out = []
+        dirty_nxb = np.max(self._Ix)  # TODO: this is not generic, refactor.
+        gridpointIndices = np.array([self._Ix, self._Iy, self._Iz]).reshape(3, -1).T
+
+        for p in gridpointIndices:
+            if 0 in p or dirty_nxb in p:
+                out.append(1)
+            else:
+                out.append(0)
+
+        return out
 
     def temperatures(self, temperatures):
         return temperatures.flatten()

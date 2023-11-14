@@ -40,7 +40,7 @@ def singleBlockCArrayTest():
     singleBlockOutFile = testDir.joinpath("model_constants.h")
 
     flashFile = h5py.File(plotFile0, "r")
-    
+
     ff = FlashBlockFactory(flashFile)
     cw = CArrayWriter(str(singleBlockOutFile), nBlocks=1)
 
