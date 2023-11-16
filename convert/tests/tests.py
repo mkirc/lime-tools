@@ -6,14 +6,16 @@ import numpy as np
 from flashBlock import FlashBlockFactory
 from writer import CArrayWriter
 from helper import setupLIMEStage1, centerAxis
+from limefile import LimeFile
 
 
 def singleBlockTest():
     testDir = pathlib.Path(__file__).parent.absolute()
     plotFile0 = testDir.joinpath("SpitzerTest_hdf5_plt_cnt_0000")
-    singleBlockOutFile = testDir.joinpath("single_block_stage_1.h5")
+    singleBlockOutFile = testDir.joinpath("test.h5")
 
-    with h5py.File(f"{str(singleBlockOutFile)}", "w") as outFile:
+    # with h5py.File(f"{str(singleBlockOutFile)}", "w") as outFile:
+    with LimeFile(f"{str(singleBlockOutFile)}", "w") as limeFile:
         flashFile = h5py.File(plotFile0, "r")
 
         ff = FlashBlockFactory(flashFile)
@@ -26,8 +28,8 @@ def singleBlockTest():
 
         minscale = 2 * np.max(x1) / 8  # assumes cubic centered block with nxb=8
 
-        lime_x1, lime_x2, lime_x3 = setupLIMEStage1(
-            outFile, n_blocks=1, radius=radius, minscale=minscale
+        lime_x1, lime_x2, lime_x3 = limeFile.setupStageOne(
+            nBlocks=1, nSinks=296, radius=radius, minscale=minscale
         )
 
         lime_x1[0:512] = x1
