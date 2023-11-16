@@ -13,4 +13,4 @@ if __name__ == "__main__":
     outFilePath = sys.argv[2]
     ff = FlashBlockFactory(flashFile)
     lw = LIMEWriter(outFilePath, N_BLOCKS)
-    lw.write(ff.generateBlocksForSlice(slice(0,N_BLOCKS)))
+    lw.write(ff.generateBlocksForSlice(slice(0, N_BLOCKS)))

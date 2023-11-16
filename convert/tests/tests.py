@@ -36,6 +36,7 @@ def singleBlockTest():
         lime_x2[0:512] = centerAxis(block.gridpoints[:, 1])
         lime_x3[0:512] = centerAxis(block.gridpoints[:, 2])
 
+
 def singleBlockCArrayTest():
     testDir = pathlib.Path(__file__).parent.absolute()
     plotFile0 = testDir.joinpath("SpitzerTest_hdf5_plt_cnt_0000")
@@ -56,6 +57,3 @@ def singleBlockCArrayTest():
     minscale = 2 * np.max(block.gridpoints[:, 0]) / 8
 
     cw.writeSingleBlock(block, radius, minscale)
-
-
-

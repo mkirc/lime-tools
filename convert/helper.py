@@ -20,6 +20,7 @@ def nulltermStringType(length):
     type_id = TypeID.copy(h5py.h5t.C_S1)
     type_id.set_size(length)
     type_id.set_strpad(STR_NULLTERM)
+
     return h5py.Datatype(type_id)
 
 
@@ -53,7 +54,7 @@ def setupLIMEStage1(outFile, n_blocks, radius=0.0, minscale=0.0):
     lime_is_sink.attrs.create("UNIT", "", dtype=nulltermStringType(1))
 
     lime_x1 = outFile.create_dataset(
-        "GRID/columns/X1", (n_blocks * 512 +296), dtype=np.float64
+        "GRID/columns/X1", (n_blocks * 512 + 296), dtype=np.float64
     )
     lime_x1.attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
     lime_x1.attrs.create("COL_NAME", "X1", dtype=nulltermStringType(3))

@@ -14,8 +14,8 @@ def nulltermStringType(length):
 
     return h5py.Datatype(type_id)
 
-class LimeFile:
 
+class LimeFile:
     def __init__(self, *args):
         self.args = args
         self.nBlocks = 0
@@ -25,13 +25,11 @@ class LimeFile:
         self.positionDatasets = []
 
     def __enter__(self):
-
         self.file = h5py.File(*self.args)
 
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-
         self.file.__exit__(exc_type, exc_value, traceback)
 
     def setupStageOne(self, nBlocks, nSinks, radius=0.0, minscale=0.0, gridpoints=True):
@@ -62,7 +60,9 @@ class LimeFile:
 
     def createColumsGroup(self):
         self.columnsGroup = self.file.create_group("GRID/columns")
-        self.columnsGroup.attrs.create("CLASS", "DATA_GROUP", dtype=nulltermStringType(11))
+        self.columnsGroup.attrs.create(
+            "CLASS", "DATA_GROUP", dtype=nulltermStringType(11)
+        )
 
     def createIdDataset(self):
         self.idDataset = self.file.create_dataset(
@@ -78,7 +78,9 @@ class LimeFile:
 
     def createSinkDataset(self):
         self.sinkDataset = self.file.create_dataset(
-            "GRID/columns/IS_SINK", (self.nBlocks * self.pointsPerBlock + self.nSinks), dtype=np.int16
+            "GRID/columns/IS_SINK",
+            (self.nBlocks * self.pointsPerBlock + self.nSinks),
+            dtype=np.int16,
         )
         self.idDataset.attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
         self.idDataset.attrs.create("COL_NAME", "IS_SINK", dtype=nulltermStringType(8))
@@ -91,10 +93,16 @@ class LimeFile:
                 self.file.create_dataset(
                     f"GRID/columns/X{i}",
                     (self.nBlocks * self.pointsPerBlock + self.nSinks),
-                    dtype=np.float64
+                    dtype=np.float64,
                 )
             )
-            self.positionDatasets[i-1].attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
-            self.positionDatasets[i-1].attrs.create("COL_NAME", f"X{i}", dtype=nulltermStringType(3))
-            self.positionDatasets[i-1].attrs.create("POSITION", i+1, dtype=np.int32)
-            self.positionDatasets[i-1].attrs.create("UNIT", "m", dtype=nulltermStringType(2))
+            self.positionDatasets[i - 1].attrs.create(
+                "CLASS", "COLUMN", dtype=nulltermStringType(7)
+            )
+            self.positionDatasets[i - 1].attrs.create(
+                "COL_NAME", f"X{i}", dtype=nulltermStringType(3)
+            )
+            self.positionDatasets[i - 1].attrs.create("POSITION", i + 1, dtype=np.int32)
+            self.positionDatasets[i - 1].attrs.create(
+                "UNIT", "m", dtype=nulltermStringType(2)
+            )
