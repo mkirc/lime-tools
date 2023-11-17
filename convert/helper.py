@@ -26,10 +26,10 @@ def flatten3DValues(valuesX, valuesY, valuesZ):
 def radiusForBoundingboxes(boundingboxes):
     """returns 3D radius of sphere guaranteed to envelop region
     defined in list of boundingboxes"""
-    xMax, yMax, zMax = 0
+    xMax = yMax = zMax = 0
     for bb in boundingboxes:
-        xMax = np.max(xMax, np.max(np.abs(bb[0][1]), np.abs(bb[0][0])))
-        yMax = np.max(yMax, np.max(np.abs(bb[1][1]), np.abs(bb[1][0])))
-        zMax = np.max(zMax, np.max(np.abs(bb[2][1]), np.abs(bb[2][0])))
+        xMax = max(xMax, max(np.abs(bb[0][1]),abs(bb[0][0])))
+        yMax = max(yMax, max(abs(bb[1][1]), abs(bb[1][0])))
+        zMax = max(zMax, max(abs(bb[2][1]), abs(bb[2][0])))
 
-    return np.square(xMax**2 + yMax**2 + zMax**2)
+    return np.sqrt(xMax**2 + yMax**2 + zMax**2)
