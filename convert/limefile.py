@@ -22,18 +22,22 @@ class LimeFile:
         self.nSinks = 0
         self.radius = 0.0
         self.minscale = 0.0
+        self.gpPerBlock = 512
+        self.gridGroup = None
+        self.columnsGroup = None
+        self.idDataset = None
         self.positionDatasets = []
+        self.sinkDataset = None
 
     def __enter__(self):
         self.file = h5py.File(*self.args)
-
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.file.__exit__(exc_type, exc_value, traceback)
 
     def setupStageOne(self, nBlocks, nSinks, radius=0.0, minscale=0.0, gridpoints=True):
-        self.pointsPerBlock = 512 if gridpoints else 1
+        self.gpPerBlock = 512 if gridpoints else 1
         self.nBlocks = nBlocks
         self.nSinks = nSinks
         self.radius = radius
@@ -43,8 +47,9 @@ class LimeFile:
         self.createColumsGroup()
         self.createIdDataset()
         self.createPositionDatasets()
+        self.createSinkDataset()
 
-        return self.positionDatasets
+        return self.positionDatasets, self.sinkDataset
 
     def createLimeFileAttrs(self):
         self.file.attrs.create("RADIUS  ", self.radius, dtype=np.float64)
@@ -67,9 +72,9 @@ class LimeFile:
     def createIdDataset(self):
         self.idDataset = self.file.create_dataset(
             "GRID/columns/ID",
-            (self.nBlocks * self.pointsPerBlock + self.nSinks),
+            (self.nBlocks * self.gpPerBlock + self.nSinks),
             dtype=np.uint32,
-            data=np.arange(self.nBlocks * self.pointsPerBlock + self.nSinks),
+            data=np.arange(self.nBlocks * self.gpPerBlock + self.nSinks),
         )
         self.idDataset.attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
         self.idDataset.attrs.create("COL_NAME", "ID", dtype=nulltermStringType(3))
@@ -79,7 +84,7 @@ class LimeFile:
     def createSinkDataset(self):
         self.sinkDataset = self.file.create_dataset(
             "GRID/columns/IS_SINK",
-            (self.nBlocks * self.pointsPerBlock + self.nSinks),
+            (self.nBlocks * self.gpPerBlock + self.nSinks),
             dtype=np.int16,
         )
         self.idDataset.attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
@@ -88,11 +93,12 @@ class LimeFile:
         self.idDataset.attrs.create("UNIT", "", dtype=nulltermStringType(1))
 
     def createPositionDatasets(self):
+        """creates dataset of shape (len(blocks)* points/block + len(sinkpoints),)"""
         for i in range(1, 4):
             self.positionDatasets.append(
                 self.file.create_dataset(
                     f"GRID/columns/X{i}",
-                    (self.nBlocks * self.pointsPerBlock + self.nSinks),
+                    (self.nBlocks * self.gpPerBlock + self.nSinks),
                     dtype=np.float64,
                 )
             )
@@ -106,3 +112,31 @@ class LimeFile:
             self.positionDatasets[i - 1].attrs.create(
                 "UNIT", "m", dtype=nulltermStringType(2)
             )
+
+    def writeStageOne(self, blocks, sinks):
+        xSink, ySink, zSink = sinks
+        allGridpoints = self.nBlocks * self.gpPerBlock
+
+        # write gridpoint positions
+        iBlock = 0
+        for block in blocks:
+            self.positionDatasets[0][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 0]
+            self.positionDatasets[1][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 1]
+            self.positionDatasets[2][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 2]
+
+            iBlock += 1
+
+        # write sinkpoint positions
+        self.positionDatasets[0][allGridpoints : allGridpoints + self.nSinks] = xSink
+        self.positionDatasets[1][allGridpoints : allGridpoints + self.nSinks] = ySink
+        self.positionDatasets[2][allGridpoints : allGridpoints + self.nSinks] = zSink
+
+        # write sinkpoint bitmask
+        self.sinkDataset[0:allGridpoints] = np.zeros(allGridpoints)
+        self.sinkDataset[allGridpoints:] = np.ones(self.nSinks)
