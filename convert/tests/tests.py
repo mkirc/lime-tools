@@ -3,38 +3,67 @@ import pathlib
 import h5py
 import numpy as np
 
-from flashBlock import FlashBlockFactory
+from flashBlock import FlashFactory
 from writer import CArrayWriter
-from helper import setupLIMEStage1, centerAxis
+from helper import setupLIMEStage1, centerAxis, sampleSpherical
 from limefile import LimeFile
+
+
+def allBlocksTest():
+    testDir = pathlib.Path(__file__).parent.absolute()
+    plotFile = testDir.joinpath("be_hdf5_plt_cnt_0000")
+    outFile = testDir.joinpath("test.h5")
+    NSINKS = 1e3
+
+    with LimeFile(f"{str(singleBlockOutFile)}", "w") as limeFile:
+        flashFile = h5py.File(plotFile, "r")
+
+        ff = FlashFactory(flashFile)
+
+        nBlocks = len(ff.leaves)
+        allLeafSlice = slice(0, nBlocks)
+
+        # generate sinkpoints
+        sinkpoints = sampleSpherical(NSINKS) * ff.radius
+
+        # prepare outfile
+        limeFile.setupStageOne(
+            nBlocks=nBlocks, nSinks=NSINKS, radius=ff.radius, minscale=ff.minscale
+        )
+
+        limeFile.writeStageOne(ff.generateBlocksForSlice(allLeafSlice), sinkpoints)
 
 
 def singleBlockTest():
     testDir = pathlib.Path(__file__).parent.absolute()
-    plotFile0 = testDir.joinpath("SpitzerTest_hdf5_plt_cnt_0000")
+    plotFile0 = testDir.joinpath("be_hdf5_plt_cnt_0004")
     singleBlockOutFile = testDir.joinpath("test.h5")
+    NSINKS = 512
 
-    # with h5py.File(f"{str(singleBlockOutFile)}", "w") as outFile:
     with LimeFile(f"{str(singleBlockOutFile)}", "w") as limeFile:
         flashFile = h5py.File(plotFile0, "r")
 
-        ff = FlashBlockFactory(flashFile)
+        ff = FlashFactory(flashFile)
 
         block = next(ff.generateBlocksForSlice(slice(0, 1)))
 
-        x1 = centerAxis(block.gridpoints[:, 0])
+        block.gridpoints[:, 0] = centerAxis(block.gridpoints[:, 0])
+        block.gridpoints[:, 1] = centerAxis(block.gridpoints[:, 1])
+        block.gridpoints[:, 2] = centerAxis(block.gridpoints[:, 2])
 
-        radius = np.max(x1)  # assumes cubic block
-
-        minscale = 2 * np.max(x1) / 8  # assumes cubic centered block with nxb=8
-
-        lime_x1, lime_x2, lime_x3 = limeFile.setupStageOne(
-            nBlocks=1, nSinks=296, radius=radius, minscale=minscale
+        radius = np.sqrt(
+            np.max(np.abs(block.gridpoints[:, 0])) ** 2
+            + np.max(np.abs(block.gridpoints[:, 1])) ** 2
+            + np.max(np.abs(block.gridpoints[:, 2])) ** 2
         )
 
-        lime_x1[0:512] = x1
-        lime_x2[0:512] = centerAxis(block.gridpoints[:, 1])
-        lime_x3[0:512] = centerAxis(block.gridpoints[:, 2])
+        sinkpoints = sampleSpherical(NSINKS) * radius
+
+        limeFile.setupStageOne(
+            nBlocks=1, nSinks=NSINKS, radius=ff.radius, minscale=ff.minscale
+        )
+
+        limeFile.writeStageOne([block], sinkpoints)
 
 
 def singleBlockCArrayTest():
