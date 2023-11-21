@@ -4,8 +4,22 @@ from h5py import string_dtype
 from h5py import Datatype
 from h5py.h5t import TypeID, STR_NULLTERM
 
+def sampleSphere(npoints):
+    phi   = np.random.uniform(0, 2 * np.pi, npoints)
+    theta = np.arccos(np.random.uniform(-1, 1, npoints))
+    u     = np.random.uniform(0, 1, npoints)
 
-def sampleSpherical(npoints, ndim=3):
+    coords = np.zeros((npoints,3))
+
+    for i in range(npoints):
+        r = u[i] ** 1/3
+        coords[i, 0] = r * np.sin(theta[i]) * np.cos(phi[i])
+        coords[i, 1] = r * np.sin(theta[i]) * np.sin(phi[i])
+        coords[i, 2] = r * np.cos(theta[i])
+
+    return coords
+
+def sampleSphereSurface(npoints, ndim=3):
     """generates points randomly placed on unit sphere"""
     vec = np.random.randn(ndim, npoints)
     vec /= np.linalg.norm(vec, axis=0)
