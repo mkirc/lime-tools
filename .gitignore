@@ -31,3 +31,6 @@ doc/*.html
 
 # vanilla lime dir
 lime-1.9.5/
+
+# convert test files
+convert/tests/*
