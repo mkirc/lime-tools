@@ -51,6 +51,34 @@ class LimeFile:
 
         return self.positionDatasets, self.sinkDataset
 
+    def writeStageOne(self, blocks, sinks):
+        xSink, ySink, zSink = sinks
+        allGridpoints = self.nBlocks * self.gpPerBlock
+
+        # write gridpoint positions
+        iBlock = 0
+        for block in blocks:
+            self.positionDatasets[0][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 0]
+            self.positionDatasets[1][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 1]
+            self.positionDatasets[2][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 2]
+
+            iBlock += 1
+
+        # write sinkpoint positions
+        self.positionDatasets[0][allGridpoints : allGridpoints + self.nSinks] = xSink
+        self.positionDatasets[1][allGridpoints : allGridpoints + self.nSinks] = ySink
+        self.positionDatasets[2][allGridpoints : allGridpoints + self.nSinks] = zSink
+
+        # write sinkpoint bitmask
+        self.sinkDataset[0:allGridpoints] = np.zeros(allGridpoints)
+        self.sinkDataset[allGridpoints:] = np.ones(self.nSinks)
+
     def createLimeFileAttrs(self):
         self.file.attrs.create("RADIUS  ", self.radius, dtype=np.float64)
         self.file.attrs.create("MINSCALE", self.minscale, dtype=np.float64)
@@ -112,31 +140,3 @@ class LimeFile:
             self.positionDatasets[i - 1].attrs.create(
                 "UNIT", "m", dtype=nulltermStringType(2)
             )
-
-    def writeStageOne(self, blocks, sinks):
-        xSink, ySink, zSink = sinks
-        allGridpoints = self.nBlocks * self.gpPerBlock
-
-        # write gridpoint positions
-        iBlock = 0
-        for block in blocks:
-            self.positionDatasets[0][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 0]
-            self.positionDatasets[1][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 1]
-            self.positionDatasets[2][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 2]
-
-            iBlock += 1
-
-        # write sinkpoint positions
-        self.positionDatasets[0][allGridpoints : allGridpoints + self.nSinks] = xSink
-        self.positionDatasets[1][allGridpoints : allGridpoints + self.nSinks] = ySink
-        self.positionDatasets[2][allGridpoints : allGridpoints + self.nSinks] = zSink
-
-        # write sinkpoint bitmask
-        self.sinkDataset[0:allGridpoints] = np.zeros(allGridpoints)
-        self.sinkDataset[allGridpoints:] = np.ones(self.nSinks)

@@ -10,7 +10,7 @@ from helper import (
     radiusForBoundingboxes,
     sampleSphere
 )
-from limefile import LimeFile
+from limeFile import LimeFile
 
 
 def allBlocksTest():
