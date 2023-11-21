@@ -15,9 +15,9 @@ class FlashFactory:
         self.refinementLevels = self.file.get("refine level")
         self.blockSizes = self.file.get("block size")
         self.radius = np.sqrt(
-            np.max(self.blockSizes[0]) ** 2
-            + np.max(self.blockSizes[1]) ** 2
-            + np.max(self.blockSizes[2]) ** 2
+            np.max(self.blockSizes[0][0]) ** 2
+            + np.max(self.blockSizes[0][1]) ** 2
+            + np.max(self.blockSizes[0][2]) ** 2
         )
         self.minscale = (
             np.max(self.blockSizes[0]) / (2 ** (np.max(self.refinementLevels) - 1)) / 8
