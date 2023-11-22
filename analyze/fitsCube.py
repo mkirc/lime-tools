@@ -11,7 +11,7 @@ from spectral_cube import SpectralCube
 
 # u.add_enabled_units(u.def_unit(['JY/PIXEL'], represents=u.<correct_unit>))
 
-file = fits.open("../../wip/models/advanced/image0_Kelvin.fits")
+file = fits.open("../../wip/models/hdf5/image0_Kelvin.fits")
 
 file[0].header["CUNIT3"] = "m/s"
 
@@ -23,7 +23,7 @@ image_wcs = WCS(image_hdu)
 
 
 # Slice the cube along the spectral axis, and display a quick image
-cube[30, :, :].quicklook("xy-quick.png")
+cube[30, :, :].quicklook("out/xy-quick.png")
 
 
 print(image_wcs)
@@ -41,7 +41,7 @@ ax.set_xlabel("Right Ascension", fontsize=16)
 ax.set_ylabel("Declination", fontsize=16)
 
 # plt.plot(cube[:,:50,50])
-plt.savefig("spec-quick.png", bbox_inches="tight")
+plt.savefig("out/spec-quick.png", bbox_inches="tight")
 
 # Extract a single spectrum through the data cube
 # cube[:,50,50].quicklook('spec-quick.png')
@@ -50,10 +50,10 @@ plt.savefig("spec-quick.png", bbox_inches="tight")
 # zero'th moment
 m0 = cube.moment(order=0)
 print(m0.unit)
-m0.quicklook("m0.png")
+m0.quicklook("out/m0.png")
 m1 = cube.moment(order=1)
 print(m1.unit)
-m1.quicklook("m1.png")
+m1.quicklook("out/m1.png")
 
 
 # f  = aplpy.FITSFigure(m0.hdu)
