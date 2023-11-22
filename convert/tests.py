@@ -74,7 +74,7 @@ def singleBlockTest():
 
 
 def suzanneTest():
-    
+
     vertices = []
 
     with open("tests/suzanne.obj", "r") as tpFile:
