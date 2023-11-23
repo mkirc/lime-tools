@@ -1,3 +1,4 @@
+import pathlib
 import aplpy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,39 +10,75 @@ from astropy.wcs import WCS
 
 from spectral_cube import SpectralCube
 
-u.add_enabled_units(u.def_unit(['JY/PIXEL'], represents=u.Jy))
+outDir = pathlib.Path(__file__).parent.absolute() / 'out'
+inDir = pathlib.Path(__file__).parent.parent.parent.absolute() / 'wip' / 'models' / 'hdf5'
 
-file = fits.open("../../wip/models/hdf5/image0_Jansky-per-px.fits")
+def plotJanskyPerPixel():
 
-file[0].header["CUNIT3"] = "m/s"
+    u.add_enabled_units(u.def_unit(['JY/PIXEL'], represents=u.Jy))
 
+    file = fits.open(str(inDir.joinpath("image0_Jansky-per-px.fits")))
 
-cube = SpectralCube.read(file)
+    file[0].header["CUNIT3"] = "m/s"
 
-image_hdu = file[0]
-image_wcs = WCS(image_hdu)
+    # cube = SpectralCube.read(file)
 
+    image_hdu = file[0]
+    image_wcs = WCS(image_hdu)
 
-# Slice the cube along the spectral axis, and display a quick image
-cube[30, :, :].quicklook("out/xy-quick.png")
+    plotSpectralCube(image_hdu, image_wcs, 'jyPp.pdf')
+    file.close()
 
+def plotOpticalDepth():
 
-# print(image_wcs)
+    file = fits.open(str(inDir.joinpath("image0_Tau.fits")))
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection=image_wcs, slices=("x", "y", 30, 1))
-im = ax.imshow(image_hdu.data[0, 30, :, :])
+    file[0].header["CUNIT3"] = "m/s"
 
-# Add a colorbar
-cbar = plt.colorbar(im, pad=0.07)
-cbar.set_label(image_hdu.header["BUNIT"], size=16)
+    # cube = SpectralCube.read(file)
 
-# Add axes labels
-ax.set_xlabel("Right Ascension", fontsize=16)
-ax.set_ylabel("Declination", fontsize=16)
+    image_hdu = file[0]
+    image_wcs = WCS(image_hdu)
 
-# plt.plot(cube[:,:50,50])
-plt.savefig("out/spec-quick.png", bbox_inches="tight")
+    plotSpectralCube(image_hdu, image_wcs, 'tau.pdf')
+    file.close()
+
+def plotKelvin():
+
+    file = fits.open(str(inDir.joinpath("image0_Kelvin.fits")))
+
+    file[0].header["CUNIT3"] = "m/s"
+
+    # cube = SpectralCube.read(file)
+
+    image_hdu = file[0]
+    image_wcs = WCS(image_hdu)
+
+    plotSpectralCube(image_hdu, image_wcs, 'kelvin.pdf')
+    file.close()
+
+def plotSpectralCube(imageHDU, projection, name="spec-quick.png"):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection=projection, slices=("x", "y", 30, 1))
+    im = ax.imshow(imageHDU.data[0, 30, :, :])
+
+    # Add a colorbar
+    cbar = plt.colorbar(im, pad=0.07)
+    cbar.set_label(imageHDU.header["BUNIT"], size=14)
+
+    # Add axes labels
+    ax.set_xlabel("Right Ascension", fontsize=14)
+    ax.set_ylabel("Declination", fontsize=14)
+
+    # plt.plot(cube[:,:50,50])
+    plt.savefig(str(outDir.joinpath(name)), bbox_inches="tight")
+
+if __name__ == "__main__":
+
+    plotJanskyPerPixel()
+    plotKelvin()
+    plotOpticalDepth()
 
 # Extract a single spectrum through the data cube
 # cube[:,50,50].quicklook('spec-quick.png')
@@ -63,4 +100,3 @@ plt.savefig("out/spec-quick.png", bbox_inches="tight")
 # f.save('m0.png')
 
 # print(cube)
-file.close()
