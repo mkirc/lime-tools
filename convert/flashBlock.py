@@ -105,7 +105,7 @@ class FlashBlock:
         self.nyb * self.nzb, 3)"""
 
         (dx, x0), (dy, y0), (dz, z0) = [
-            (bb[i][1] - bb[i][0], bb[i][0]) for i in range(3)
+            ((bb[i][1] - bb[i][0]) / 8, bb[i][0]) for i in range(3)
         ]
         return (
             np.array([self._Ix * dx + x0, self._Iy * dy + y0, self._Iz * dz + z0])
