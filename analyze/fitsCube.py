@@ -9,9 +9,9 @@ from astropy.wcs import WCS
 
 from spectral_cube import SpectralCube
 
-# u.add_enabled_units(u.def_unit(['JY/PIXEL'], represents=u.<correct_unit>))
+u.add_enabled_units(u.def_unit(['JY/PIXEL'], represents=u.Jy))
 
-file = fits.open("../../wip/models/hdf5/image0_Kelvin.fits")
+file = fits.open("../../wip/models/hdf5/image0_Jansky-per-px.fits")
 
 file[0].header["CUNIT3"] = "m/s"
 
@@ -26,7 +26,7 @@ image_wcs = WCS(image_hdu)
 cube[30, :, :].quicklook("out/xy-quick.png")
 
 
-print(image_wcs)
+# print(image_wcs)
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection=image_wcs, slices=("x", "y", 30, 1))
@@ -47,18 +47,20 @@ plt.savefig("out/spec-quick.png", bbox_inches="tight")
 # cube[:,50,50].quicklook('spec-quick.png')
 
 
-# zero'th moment
-m0 = cube.moment(order=0)
-print(m0.unit)
-m0.quicklook("out/m0.png")
-m1 = cube.moment(order=1)
-print(m1.unit)
-m1.quicklook("out/m1.png")
+# # zero'th moment
+# m0 = cube.moment(order=0)
+# print(m0.unit)
+# m0.quicklook("out/m0.png")
+
+# # first moment
+# m1 = cube.moment(order=1)
+# print(m1.unit)
+# m1.quicklook("out/m1.png")
 
 
 # f  = aplpy.FITSFigure(m0.hdu)
 # f.show_colorscale()
 # f.save('m0.png')
 
-print(cube)
+# print(cube)
 file.close()
