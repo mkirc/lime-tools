@@ -129,6 +129,8 @@ class FlashBlock:
 
         return out
 
+    # temperatures(), dusttemperatures() and densities() all have the
+    # shape (512,)
     def temperatures(self, temperatures):
         if temperatures is not None:
             return temperatures.flatten()
@@ -141,6 +143,7 @@ class FlashBlock:
         if densities is not None:
             return densities.flatten()
 
+    # velocities() and magfluxes() both have shape (512,3)
     def velocities(self, velocities):
         if velocities is not None:
             return flatten3DValues(velocities[0], velocities[1], velocities[2])
