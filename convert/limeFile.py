@@ -24,10 +24,13 @@ class LimeFile:
         self.minscale = 0.0
         self.gpPerBlock = 512
         self.gridGroup = None
-        self.columnsGroup = None
+        self.gridColumnsGroup = None
         self.idDataset = None
         self.positionDatasets = []
         self.sinkDataset = None
+        self.densityDataset = None
+        self.gasTemperatureDataset = None
+        self.dustTemperatureDataset = None
 
     def __enter__(self):
         self.file = h5py.File(*self.args)
@@ -36,7 +39,10 @@ class LimeFile:
     def __exit__(self, exc_type, exc_value, traceback):
         self.file.__exit__(exc_type, exc_value, traceback)
 
-    def setupStageOne(self, nBlocks, nSinks, radius=0.0, minscale=0.0, gridpoints=True):
+    def setupPointsAndSinks(
+        self, nBlocks, nSinks, radius=0.0, minscale=0.0, gridpoints=True
+    ):
+        """needs to be called first. Number of Blocks and sinks need to be known"""
         self.gpPerBlock = 512 if gridpoints else 1
         self.nBlocks = nBlocks
         self.nSinks = nSinks
@@ -51,13 +57,34 @@ class LimeFile:
 
         return self.positionDatasets, self.sinkDataset
 
-    def writeStageOne(self, blocks, sinks):
+    def setupTemperatureAndDensity(self):
+        """asssumes setupPointsAndSinks called before"""
+
+        if not self.gridColumnsGroup:
+            raise AttributeError(
+                "No GRID/columns Group, run setupPointsAndSinks first."
+            )
+
+        self.createDensityDataset()
+        self.createGasTemperatureDataset()
+
+    def setupDustTemperature(self):
+        """asssumes setupPointsAndSinks called before"""
+
+        if not self.gridColumnsGroup:
+            raise AttributeError(
+                "No GRID/columns Group, run setupPointsAndSinks first."
+            )
+
+        self.createDustTemperatureDataset()
+
+    def writeBlocksAndSinks(self, blocks, sinks):
         xSink, ySink, zSink = sinks
         allGridpoints = self.nBlocks * self.gpPerBlock
 
-        # write gridpoint positions
         iBlock = 0
         for block in blocks:
+            # write gridpoint positions
             self.positionDatasets[0][
                 iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
             ] = block.gridpoints[:, 0]
@@ -67,6 +94,24 @@ class LimeFile:
             self.positionDatasets[2][
                 iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
             ] = block.gridpoints[:, 2]
+
+            if self.densityDataset and block.densities:
+                # write densities
+                self.densityDataset[
+                    iBlock * self.gpPerBlock : iBlock + 1 * self.gpPerBlock
+                ] = block.densities[:]
+
+            if self.gasTemperatureDataset and block.temperatures:
+                # write temperatures
+                self.gasTemperatureDataset[
+                    iBlock * self.gpPerBlock : iBlock + 1 * self.gpPerBlock
+                ] = block.temperatues[:]
+
+            if self.dustTemperatureDataset and block.dusttemperatures:
+                # write densities
+                self.dustTemperatureDataset[
+                    iBlock * self.gpPerBlock : iBlock + 1 * self.gpPerBlock
+                ] = block.dusttemperatures[:]
 
             iBlock += 1
 
@@ -92,8 +137,8 @@ class LimeFile:
         self.gridGroup.attrs.create("HDUNUM", 0, dtype=np.int32)
 
     def createColumsGroup(self):
-        self.columnsGroup = self.file.create_group("GRID/columns")
-        self.columnsGroup.attrs.create(
+        self.gridColumnsGroup = self.file.create_group("GRID/columns")
+        self.gridColumnsGroup.attrs.create(
             "CLASS", "DATA_GROUP", dtype=nulltermStringType(11)
         )
 
@@ -140,3 +185,50 @@ class LimeFile:
             self.positionDatasets[i - 1].attrs.create(
                 "UNIT", "m", dtype=nulltermStringType(2)
             )
+
+    def createDensityDataset(self):
+        self.densityDataset = self.file.create_dataset(
+            "GRID/columns/DENSITY1",
+            (self.nBlocks * self.gpPerBlock + self.nSinks),
+            dtype=np.float32,
+        )
+        self.densityDataset.attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
+        self.densityDataset.attrs.create(
+            "COL_NAME", "DENSITY1", dtype=nulltermStringType(9)
+        )
+        self.densityDataset.attrs.create("POSITION", 8, dtype=np.int32)
+        self.densityDataset.attrs.create("UNIT", "kg/m^3", dtype=nulltermStringType(7))
+
+    def createGasTemperatureDataset(self):
+        self.gasTemperatureDataset = self.file.create_dataset(
+            "GRID/columns/TEMPKNTC",
+            (self.nBlocks * self.gpPerBlock + self.nSinks),
+            dtype=np.float32,
+        )
+        self.gasTemperatureDataset.attrs.create(
+            "CLASS", "COLUMN", dtype=nulltermStringType(7)
+        )
+        self.gasTemperatureDataset.attrs.create(
+            "COL_NAME", "TEMPKNTC", dtype=nulltermStringType(9)
+        )
+        self.gasTemperatureDataset.attrs.create("POSITION", 9, dtype=np.int32)
+        self.gasTemperatureDataset.attrs.create(
+            "UNIT", "K", dtype=nulltermStringType(2)
+        )
+
+    def createDustTemperatureDataset(self):
+        self.dustTemperatureDataset = self.file.create_dataset(
+            "GRID/columns/TEMPDUST",
+            (self.nBlocks * self.gpPerBlock + self.nSinks),
+            dtype=np.float32,
+        )
+        self.dustTemperatureDataset.attrs.create(
+            "CLASS", "COLUMN", dtype=nulltermStringType(7)
+        )
+        self.dustTemperatureDataset.attrs.create(
+            "COL_NAME", "TEMPDUST", dtype=nulltermStringType(9)
+        )
+        self.dustTemperatureDataset.attrs.create("POSITION", 10, dtype=np.int32)
+        self.dustTemperatureDataset.attrs.create(
+            "UNIT", "K", dtype=nulltermStringType(2)
+        )
