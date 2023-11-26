@@ -31,8 +31,9 @@ def centerAxis(arraylike):
 
 
 def flatten3DValues(valuesX, valuesY, valuesZ):
-    """takes 3d list of np.arrays of shape (x,y,z) returns 3d np.array of row-major
-    flattened np.arrays of shape (x*y*z,)"""
+    """takes three-element-list of np.arrays of shape (nx,ny,nz), row-major
+    flattening them and
+    returns np.array shape (nx*ny*nz,3)"""
 
     return np.array([valuesX.flatten(), valuesY.flatten(), valuesZ.flatten()]).T
 
