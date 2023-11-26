@@ -97,7 +97,6 @@ class FlashBlock:
         self.densities = self.densities(dens)
         self.velocities = self.velocities(vels)
         self.magfluxes = self.magfluxes(mags)
-        self.hullpoints = self.hullpoints()
 
     def gridpointsForBoundingbox(self, bb):
         """takes np.array of shape (3,2) [x,y,z, (upper/lower)]. returns
@@ -112,22 +111,6 @@ class FlashBlock:
             .reshape(3, -1)
             .T
         )
-
-    def hullpoints(self):
-        """hullpoint has either a index of 0 or n[xyz]b. returns bitmask for gridpoints,
-        1 indicating hullpoint, 0 indicating inner point. This whole method is pretty pointless
-        for anything other than looking at one block"""
-        out = []
-        dirty_nxb = np.max(self._Ix)  # TODO: this is not generic, refactor.
-        gridpointIndices = np.array([self._Ix, self._Iy, self._Iz]).reshape(3, -1).T
-
-        for p in gridpointIndices:
-            if 0 in p or dirty_nxb in p:
-                out.append(1)
-            else:
-                out.append(0)
-
-        return out
 
     # temperatures(), dusttemperatures() and densities() all have the
     # shape (512,)
