@@ -109,7 +109,7 @@ class LimeFile:
                     iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
                 ] = block.densities[:]
 
-            # write temperatures
+            # write gas temperatures
             if (
                 self.gasTemperatureDataset is not None
                 and block.temperatures is not None
@@ -117,8 +117,9 @@ class LimeFile:
                 self.gasTemperatureDataset[
                     iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
                 ] = block.temperatures[:]
+                # ] = [23] * self.gpPerBlock
 
-            # write densities
+            # write dust temperatures
             if (
                 self.dustTemperatureDataset is not None
                 and block.dusttemperatures is not None
@@ -246,10 +247,12 @@ class LimeFile:
         self.densityDataset.attrs.create("UNIT", "kg/m^3", dtype=nulltermStringType(7))
 
     def createGasTemperatureDataset(self):
+        totalNumber = (self.nBlocks * self.gpPerBlock + self.nSinks)
         self.gasTemperatureDataset = self.file.create_dataset(
             "GRID/columns/TEMPKNTC",
-            (self.nBlocks * self.gpPerBlock + self.nSinks),
+            totalNumber,
             dtype=np.float32,
+            data=np.array([2.7548] * totalNumber)
         )
         self.gasTemperatureDataset.attrs.create(
             "CLASS", "COLUMN", dtype=nulltermStringType(7)
