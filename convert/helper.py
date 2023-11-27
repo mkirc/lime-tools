@@ -4,23 +4,26 @@ from h5py import string_dtype
 from h5py import Datatype
 from h5py.h5t import TypeID, STR_NULLTERM
 
-def sampleSphere(npoints):
-    phi   = np.random.uniform(0, 2 * np.pi, npoints)
-    theta = np.arccos(np.random.uniform(-1, 1, npoints))
-    u     = np.random.uniform(0, 1, npoints)
 
-    coords = np.zeros((npoints,3))
+def sampleSphere(npoints):
+    """generates points randomly placed in volume of unit sphere"""
+    phi = np.random.uniform(0, 2 * np.pi, npoints)
+    theta = np.arccos(np.random.uniform(-1, 1, npoints))
+    u = np.random.uniform(0, 1, npoints)
+
+    coords = np.zeros((npoints, 3))
 
     for i in range(npoints):
-        r = u[i] ** 1/3
+        r = u[i] ** 1 / 3
         coords[i, 0] = r * np.sin(theta[i]) * np.cos(phi[i])
         coords[i, 1] = r * np.sin(theta[i]) * np.sin(phi[i])
         coords[i, 2] = r * np.cos(theta[i])
 
     return coords
 
+
 def sampleSphereSurface(npoints, ndim=3):
-    """generates points randomly placed on unit sphere"""
+    """generates points randomly placed on surface of unit sphere"""
     vec = np.random.randn(ndim, npoints)
     vec /= np.linalg.norm(vec, axis=0)
     return vec
@@ -31,11 +34,17 @@ def centerAxis(arraylike):
 
 
 def flatten3DValues(valuesX, valuesY, valuesZ):
-    """takes three-element-list of np.arrays of shape (nx,ny,nz), row-major
-    flattening them and
+    """takes three-element-list of np.arrays of shape (nx,ny,nz),
+    column-major ("Fortran-style") flattening them and
     returns np.array shape (nx*ny*nz,3)"""
 
-    return np.array([valuesX.flatten(), valuesY.flatten(), valuesZ.flatten()]).T
+    return np.array(
+        [
+            valuesX.flatten(order="F"),
+            valuesY.flatten(order="F"),
+            valuesZ.flatten(order="F"),
+        ]
+    ).T
 
 
 def radiusForBoundingboxes(boundingboxes):
@@ -43,7 +52,7 @@ def radiusForBoundingboxes(boundingboxes):
     defined in list of boundingboxes"""
     xMax = yMax = zMax = 0
     for bb in boundingboxes:
-        xMax = max(xMax, max(np.abs(bb[0][1]),abs(bb[0][0])))
+        xMax = max(xMax, max(np.abs(bb[0][1]), abs(bb[0][0])))
         yMax = max(yMax, max(abs(bb[1][1]), abs(bb[1][0])))
         zMax = max(zMax, max(abs(bb[2][1]), abs(bb[2][0])))
 

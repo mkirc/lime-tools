@@ -75,13 +75,11 @@ class FlashFactory:
 
     def velocitiesForBlock(self, blockId):
         if not self.vels[0]:
-            # raise AttributeError('No velocities present in flashfile.')
             return None
         return (self.vels[0][blockId], self.vels[1][blockId], self.vels[2][blockId])
 
     def magfluxesForBlock(self, blockId):
         if not self.mags[0]:
-            # raise AttributeError('No mag field present in flashfile.')
             return None
         return (self.mags[0][blockId], self.mags[1][blockId], self.mags[2][blockId])
 
@@ -99,9 +97,8 @@ class FlashBlock:
         self.magfluxes = self.magfluxes(mags)
 
     def gridpointsForBoundingbox(self, bb):
-        """takes np.array of shape (3,2) [x,y,z, (upper/lower)]. returns
-        row-major flattened np.array of coordinates of shape (self.nxb *
-        self.nyb * self.nzb, 3)"""
+        """takes np.array of shape (3,2) [nx,ny,nz, (upper/lower)]. returns
+        np.array of coordinates of shape (nx * ny * nz, 3)"""
 
         (dx, x0), (dy, y0), (dz, z0) = [
             ((bb[i][1] - bb[i][0]) / 8, bb[i][0]) for i in range(3)
@@ -116,15 +113,15 @@ class FlashBlock:
     # shape (512,)
     def temperatures(self, temperatures):
         if temperatures is not None:
-            return temperatures.flatten()
+            return temperatures.flatten(order="F")
 
     def dusttemperatures(self, dusttemperatures):
         if dusttemperatures is not None:
-            return dusttemperatures.flatten()
+            return dusttemperatures.flatten(order="F")
 
     def densities(self, densities):
         if densities is not None:
-            return densities.flatten()
+            return densities.flatten(order="F")
 
     # velocities() and magfluxes() both have shape (512,3)
     def velocities(self, velocities):
