@@ -86,6 +86,8 @@ class FlashFactory:
 
 class FlashBlock:
     def __init__(self, blockId, gpIndices, bb, temp, tempdust, dens, vels, mags):
+        self.moleculesPerGramH2 = 2.987350e29 # 6.02214 * 10^23 / 2.01588 N/g * 1e6 cm^3/m
+
         self.id = blockId
         self._Ix, self._Iy, self._Iz = gpIndices
 
@@ -120,8 +122,9 @@ class FlashBlock:
             return dusttemperatures.flatten(order="F")
 
     def densities(self, densities):
+        # we need to convert between g/cm^3 and N/m^3
         if densities is not None:
-            return densities.flatten(order="F")
+            return densities.flatten(order="F") * self.moleculesPerGramH2
 
     # velocities() and magfluxes() both have shape (512,3)
     def velocities(self, velocities):
