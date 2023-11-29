@@ -107,7 +107,6 @@ class LimeFile:
         )
         self.idDataset.attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
         self.idDataset.attrs.create("COL_NAME", "ID", dtype=nulltermStringType(3))
-        # self.idDataset.attrs.create("POSITION", 1, dtype=np.int32)
         self.idDataset.attrs.create("UNIT", "", dtype=nulltermStringType(1))
 
     def createSinkDataset(self):
@@ -118,7 +117,6 @@ class LimeFile:
         )
         self.idDataset.attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
         self.idDataset.attrs.create("COL_NAME", "IS_SINK", dtype=nulltermStringType(8))
-        # self.idDataset.attrs.create("POSITION", 5, dtype=np.int32)
         self.idDataset.attrs.create("UNIT", "", dtype=nulltermStringType(1))
 
     def createPositionDatasets(self):
@@ -137,7 +135,6 @@ class LimeFile:
             self.positionDatasets[i - 1].attrs.create(
                 "COL_NAME", f"X{i}", dtype=nulltermStringType(3)
             )
-            # self.positionDatasets[i - 1].attrs.create("POSITION", i + 1, dtype=np.int32)
             self.positionDatasets[i - 1].attrs.create(
                 "UNIT", "m", dtype=nulltermStringType(2)
             )
@@ -157,7 +154,6 @@ class LimeFile:
             self.velocityDatasets[i - 1].attrs.create(
                 "COL_NAME", f"VEL{i}", dtype=nulltermStringType(5)
             )
-            # self.velocityDatasets[i - 1].attrs.create("POSITION", i + 1, dtype=np.int32)
             self.velocityDatasets[i - 1].attrs.create(
                 "UNIT", "m/s", dtype=nulltermStringType(4)
             )
@@ -172,7 +168,6 @@ class LimeFile:
         self.densityDataset.attrs.create(
             "COL_NAME", "DENSITY1", dtype=nulltermStringType(9)
         )
-        # self.densityDataset.attrs.create("POSITION", 8, dtype=np.int32)
         self.densityDataset.attrs.create("UNIT", "kg/m^3", dtype=nulltermStringType(7))
 
     def createGasTemperatureDataset(self):
@@ -189,7 +184,6 @@ class LimeFile:
         self.gasTemperatureDataset.attrs.create(
             "COL_NAME", "TEMPKNTC", dtype=nulltermStringType(9)
         )
-        # self.gasTemperatureDataset.attrs.create("POSITION", 9, dtype=np.int32)
         self.gasTemperatureDataset.attrs.create(
             "UNIT", "K", dtype=nulltermStringType(2)
         )
@@ -206,7 +200,6 @@ class LimeFile:
         self.dustTemperatureDataset.attrs.create(
             "COL_NAME", "TEMPDUST", dtype=nulltermStringType(9)
         )
-        # self.dustTemperatureDataset.attrs.create("POSITION", 10, dtype=np.int32)
         self.dustTemperatureDataset.attrs.create(
             "UNIT", "K", dtype=nulltermStringType(2)
         )
