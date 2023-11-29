@@ -40,116 +40,45 @@ class LimeFile:
     def __exit__(self, exc_type, exc_value, traceback):
         self.file.__exit__(exc_type, exc_value, traceback)
 
-    def setupPointsAndSinks(
-        self, nBlocks, nSinks, radius=0.0, minscale=0.0, gridpoints=True
-    ):
+    def setupFileAttributes(self, radius=0.0, minscale=0.0):
+        self.radius = radius
+        self.minscale = minscale
+        self.createLimeFileAttrs()
+
+    def setupPrimaryGroups(self):
+        self.createGridGroup()
+        self.createColumsGroup()
+
+    def setupPoints(self, nBlocks, nSinks=0, gridpoints=True):
         """needs to be called first. Number of Blocks and sinks need to be known"""
         self.gpPerBlock = 512 if gridpoints else 1
         self.nBlocks = nBlocks
         self.nSinks = nSinks
-        self.radius = radius
-        self.minscale = minscale
-        self.createLimeFileAttrs()
-        self.createGridGroup()
-        self.createColumsGroup()
         self.createIdDataset()
         self.createPositionDatasets()
         self.createSinkDataset()
 
         return self.positionDatasets, self.sinkDataset
 
-    def setupDensityAndTemperature(self):
-        """asssumes setupPointsAndSinks called before"""
+    def setupDensity(self):
+        self.setupPropertyDataset(self.createDensityDataset)
 
-        if not self.gridColumnsGroup:
-            raise AttributeError(
-                "No GRID/columns Group, run setupPointsAndSinks first."
-            )
-        self.createDensityDataset()
-        self.createGasTemperatureDataset()
+    def setupGasTemperature(self):
+        self.setupPropertyDataset(self.createGasTemperatureDataset)
 
     def setupDustTemperature(self):
-        """asssumes setupPointsAndSinks called before"""
-
-        if not self.gridColumnsGroup:
-            raise AttributeError(
-                "No GRID/columns Group, run setupPointsAndSinks first."
-            )
-        self.createDustTemperatureDataset()
+        self.setupPropertyDataset(self.createDustTemperatureDataset)
 
     def setupVelocity(self):
-        """asssumes setupPointsAndSinks called before"""
+        self.setupPropertyDataset(self.createVelocityDatasets)
 
+    def setupPropertyDataset(self, createFunction):
+        """assumes setupPrimaryGroups called before"""
         if not self.gridColumnsGroup:
             raise AttributeError(
                 "No GRID/columns Group, run setupPointsAndSinks first."
             )
-        self.createVelocityDatasets()
-
-    def writeBlocksAndSinks(self, blocks, sinks):
-        xSink, ySink, zSink = sinks
-        allGridpoints = self.nBlocks * self.gpPerBlock
-
-        iBlock = 0
-        for block in blocks:
-            # write gridpoint positions
-            self.positionDatasets[0][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 0]
-            self.positionDatasets[1][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 1]
-            self.positionDatasets[2][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 2]
-
-            # write densities
-            if self.densityDataset is not None and block.densities is not None:
-                self.densityDataset[
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.densities[:]
-
-            # write gas temperatures
-            if (
-                self.gasTemperatureDataset is not None
-                and block.temperatures is not None
-            ):
-                self.gasTemperatureDataset[
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.temperatures[:]
-                # ] = [23] * self.gpPerBlock
-
-            # write dust temperatures
-            if (
-                self.dustTemperatureDataset is not None
-                and block.dusttemperatures is not None
-            ):
-                self.dustTemperatureDataset[
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.dusttemperatures[:]
-
-            # write velocities
-            if len(self.velocityDatasets) > 0 and block.velocities is not None:
-                self.velocityDatasets[0][
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.velocities[:, 0]
-                self.velocityDatasets[1][
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.velocities[:, 1]
-                self.velocityDatasets[2][
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.velocities[:, 2]
-
-            iBlock += 1
-
-        # write sinkpoint positions
-        self.positionDatasets[0][allGridpoints : allGridpoints + self.nSinks] = xSink
-        self.positionDatasets[1][allGridpoints : allGridpoints + self.nSinks] = ySink
-        self.positionDatasets[2][allGridpoints : allGridpoints + self.nSinks] = zSink
-
-        # write sinkpoint bitmask
-        self.sinkDataset[0:allGridpoints] = np.zeros(allGridpoints)
-        self.sinkDataset[allGridpoints:] = np.ones(self.nSinks)
+        return createFunction()
 
     def createLimeFileAttrs(self):
         self.file.attrs.create("RADIUS  ", self.radius, dtype=np.float64)
@@ -281,3 +210,72 @@ class LimeFile:
         self.dustTemperatureDataset.attrs.create(
             "UNIT", "K", dtype=nulltermStringType(2)
         )
+
+    def writeBlocks(self, blocks):
+        allGridpoints = self.nBlocks * self.gpPerBlock
+
+        iBlock = 0
+        for block in blocks:
+            # write gridpoint positions
+            self.positionDatasets[0][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 0]
+            self.positionDatasets[1][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 1]
+            self.positionDatasets[2][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.gridpoints[:, 2]
+
+            # write densities
+            if self.densityDataset is not None and block.densities is not None:
+                self.densityDataset[
+                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+                ] = block.densities[:]
+
+            # write gas temperatures
+            if (
+                self.gasTemperatureDataset is not None
+                and block.temperatures is not None
+            ):
+                self.gasTemperatureDataset[
+                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+                ] = block.temperatures[:]
+                # ] = [23] * self.gpPerBlock
+
+            # write dust temperatures
+            if (
+                self.dustTemperatureDataset is not None
+                and block.dusttemperatures is not None
+            ):
+                self.dustTemperatureDataset[
+                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+                ] = block.dusttemperatures[:]
+
+            # write velocities
+            if len(self.velocityDatasets) > 0 and block.velocities is not None:
+                self.velocityDatasets[0][
+                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+                ] = block.velocities[:, 0]
+                self.velocityDatasets[1][
+                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+                ] = block.velocities[:, 1]
+                self.velocityDatasets[2][
+                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+                ] = block.velocities[:, 2]
+
+            iBlock += 1
+
+    def writeSinks(self, sinkpoints):
+        xSink, ySink, zSink = sinkpoints
+        allGridpoints = self.nBlocks * self.gpPerBlock
+
+        # write sinkpoint positions
+        self.positionDatasets[0][allGridpoints : allGridpoints + self.nSinks] = xSink
+        self.positionDatasets[1][allGridpoints : allGridpoints + self.nSinks] = ySink
+        self.positionDatasets[2][allGridpoints : allGridpoints + self.nSinks] = zSink
+
+        # write sinkpoint bitmask
+        self.sinkDataset[0:allGridpoints] = np.zeros(allGridpoints)
+        self.sinkDataset[allGridpoints:] = np.ones(self.nSinks)
+

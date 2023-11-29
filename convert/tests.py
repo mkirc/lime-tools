@@ -12,7 +12,7 @@ from copy import deepcopy
 
 def allBlocksTest():
     testDir = pathlib.Path(__file__).parent.absolute() / "tests"
-    plotFile = testDir.joinpath("in/be_hdf5_plt_cnt_0004")
+    plotFile = testDir.joinpath("in/be_hdf5_plt_cnt_0102")
     outFile = testDir.joinpath("out/all_test.h5")
     nSinks = 1000
 
@@ -33,20 +33,19 @@ def allBlocksTest():
         sinkpoints = sampleSphereSurface(nSinks) * ff.radius * radscale
 
         # prepare outfile
-        limeFile.setupPointsAndSinks(
-            nBlocks=nBlocks,
-            nSinks=nSinks,
-            radius=ff.radius * radscale,
-            minscale=ff.minscale,
-        )
+        limeFile.setupFileAttributes(radius=ff.radius * radscale,
+                                     minscale=ff.minscale)
+        limeFile.setupPrimaryGroups()
+        limeFile.setupPoints(nBlocks=nBlocks, nSinks=nSinks)
 
-        limeFile.setupDensityAndTemperature()
+        # prepare properties
+        limeFile.setupDensity()
+        limeFile.setupGasTemperature()
         limeFile.setupVelocity()
 
         # write data
-        limeFile.writeBlocksAndSinks(
-            ff.generateBlocksForSlice(allLeafSlice), sinkpoints
-        )
+        limeFile.writeBlocks(ff.generateBlocksForSlice(allLeafSlice))
+        limeFile.writeSinks(sinkpoints)
 
 
 def threeBlocksTest():
@@ -81,14 +80,14 @@ def threeBlocksTest():
 
         blocks = [block, blockOne, blockTwo]
 
-        limeFile.setupPointsAndSinks(
-            nBlocks=len(blocks),
-            nSinks=nSinks,
-            radius=ff.radius * radScale,
-            minscale=ff.minscale,
-        )
+        limeFile.setupFileAttributes(radius=ff.radius * radScale,
+                                     minscale=ff.minscale)
+        limeFile.setupPrimaryGroups()
 
-        limeFile.writeBlocksAndSinks(blocks, sinkpoints)
+        limeFile.setupPoints(nBlocks=len(blocks), nSinks=nSinks)
+
+        limeFile.writeBlocks(blocks)
+        limeFile.writeSinks(sinkpoints)
 
 
 def singleBlockTest():
@@ -113,14 +112,17 @@ def singleBlockTest():
 
         sinkpoints = sampleSphereSurface(nSinks) * ff.radius * radScale
 
-        limeFile.setupPointsAndSinks(
-            nBlocks=1, nSinks=nSinks, radius=ff.radius * radScale, minscale=ff.minscale
-        )
+        limeFile.setupFileAttributes(ff.radius * radScale,
+                                     ff.minscale)
+        limeFile.setupPrimaryGroups()
+        limeFile.setupPoints(nBlocks=1, nSinks=nSinks)
 
-        limeFile.setupDensityAndTemperature()
+        limeFile.setupDensity()
+        limeFile.setupGasTemperature()
         limeFile.setupVelocity()
 
-        limeFile.writeBlocksAndSinks([block], sinkpoints)
+        limeFile.writeBlocks([block])
+        limeFile.writeSinks(sinkpoints)
 
 
 def suzanneTest():
@@ -170,6 +172,6 @@ def suzanneTest():
 
 
 if __name__ == "__main__":
-    # singleBlockTest()
+    singleBlockTest()
     allBlocksTest()
     # threeBlocksTest()
