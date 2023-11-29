@@ -24,7 +24,7 @@ def allBlocksTest():
         nBlocks = len(ff.leaves)
         # nBlocks = 1
         allLeafSlice = slice(0, nBlocks)
-        radscale = 2
+        radscale = 0.1
 
         # print(ff.radius)
         # print(ff.minscale)
