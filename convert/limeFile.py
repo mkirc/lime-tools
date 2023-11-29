@@ -171,12 +171,12 @@ class LimeFile:
         self.densityDataset.attrs.create("UNIT", "kg/m^3", dtype=nulltermStringType(7))
 
     def createGasTemperatureDataset(self):
-        totalNumber = (self.nBlocks * self.gpPerBlock + self.nSinks)
+        totalNumber = self.nBlocks * self.gpPerBlock + self.nSinks
         self.gasTemperatureDataset = self.file.create_dataset(
             "GRID/columns/TEMPKNTC",
             totalNumber,
             dtype=np.float32,
-            data=np.array([2.7548] * totalNumber)
+            data=np.array([2.7548] * totalNumber),
         )
         self.gasTemperatureDataset.attrs.create(
             "CLASS", "COLUMN", dtype=nulltermStringType(7)
@@ -209,53 +209,14 @@ class LimeFile:
 
         iBlock = 0
         for block in blocks:
-            # write gridpoint positions
-            self.positionDatasets[0][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 0]
-            self.positionDatasets[1][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 1]
-            self.positionDatasets[2][
-                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-            ] = block.gridpoints[:, 2]
+            # write position data
+            self.writeGridpointPositions(block, iBlock)
 
-            # write densities
-            if self.densityDataset is not None and block.densities is not None:
-                self.densityDataset[
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.densities[:]
-
-            # write gas temperatures
-            if (
-                self.gasTemperatureDataset is not None
-                and block.temperatures is not None
-            ):
-                self.gasTemperatureDataset[
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.temperatures[:]
-                # ] = [23] * self.gpPerBlock
-
-            # write dust temperatures
-            if (
-                self.dustTemperatureDataset is not None
-                and block.dusttemperatures is not None
-            ):
-                self.dustTemperatureDataset[
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.dusttemperatures[:]
-
-            # write velocities
-            if len(self.velocityDatasets) > 0 and block.velocities is not None:
-                self.velocityDatasets[0][
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.velocities[:, 0]
-                self.velocityDatasets[1][
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.velocities[:, 1]
-                self.velocityDatasets[2][
-                    iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
-                ] = block.velocities[:, 2]
+            # write property data
+            self.writeDensities(block, iBlock)
+            self.writeGasTemperatures(block, iBlock)
+            self.writeDustTemperatures(block, iBlock)
+            self.writeVelocities(block, iBlock)
 
             iBlock += 1
 
@@ -272,3 +233,47 @@ class LimeFile:
         self.sinkDataset[0:allGridpoints] = np.zeros(allGridpoints)
         self.sinkDataset[allGridpoints:] = np.ones(self.nSinks)
 
+    def writeGridpointPositions(self, block, iBlock):
+        self.positionDatasets[0][
+            iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+        ] = block.gridpoints[:, 0]
+        self.positionDatasets[1][
+            iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+        ] = block.gridpoints[:, 1]
+        self.positionDatasets[2][
+            iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+        ] = block.gridpoints[:, 2]
+
+    def writeDensities(self, block, iBlock):
+        if self.densityDataset is not None and block.densities is not None:
+            self.densityDataset[
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.densities[:]
+
+    def writeGasTemperatures(self, block, iBlock):
+        if self.gasTemperatureDataset is not None and block.temperatures is not None:
+            self.gasTemperatureDataset[
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.temperatures[:]
+            # ] = [23] * self.gpPerBlock
+
+    def writeDustTemperatures(self, block, iBlock):
+        if (
+            self.dustTemperatureDataset is not None
+            and block.dusttemperatures is not None
+        ):
+            self.dustTemperatureDataset[
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.dusttemperatures[:]
+
+    def writeVelocities(self, block, iBlock):
+        if len(self.velocityDatasets) > 0 and block.velocities is not None:
+            self.velocityDatasets[0][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.velocities[:, 0]
+            self.velocityDatasets[1][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.velocities[:, 1]
+            self.velocityDatasets[2][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.velocities[:, 2]
