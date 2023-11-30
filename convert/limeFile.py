@@ -28,6 +28,7 @@ class LimeFile:
         self.idDataset = None
         self.positionDatasets = []
         self.velocityDatasets = []
+        self.magfieldDatasets = []
         self.sinkDataset = None
         self.densityDataset = None
         self.gasTemperatureDataset = None
@@ -71,6 +72,9 @@ class LimeFile:
 
     def setupVelocity(self):
         self.setupPropertyDataset(self.createVelocityDatasets)
+
+    def setupMagfield(self):
+        self.setupPropertyDataset(self.createMagfieldDatasets)
 
     def setupPropertyDataset(self, createFunction):
         """assumes setupPrimaryGroups called before"""
@@ -120,42 +124,30 @@ class LimeFile:
         self.idDataset.attrs.create("UNIT", "", dtype=nulltermStringType(1))
 
     def createPositionDatasets(self):
-        """creates dataset of shape (len(blocks)* points/block + len(sinkpoints),)"""
-        for i in range(1, 4):
-            self.positionDatasets.append(
-                self.file.create_dataset(
-                    f"GRID/columns/X{i}",
-                    (self.nBlocks * self.gpPerBlock + self.nSinks),
-                    dtype=np.float64,
-                )
-            )
-            self.positionDatasets[i - 1].attrs.create(
-                "CLASS", "COLUMN", dtype=nulltermStringType(7)
-            )
-            self.positionDatasets[i - 1].attrs.create(
-                "COL_NAME", f"X{i}", dtype=nulltermStringType(3)
-            )
-            self.positionDatasets[i - 1].attrs.create(
-                "UNIT", "m", dtype=nulltermStringType(2)
-            )
+        self.create3DDatasetForNameAndUnit(self.positionDatasets, "X", "m")
 
     def createVelocityDatasets(self):
+        self.create3DDatasetForNameAndUnit(self.velocityDatasets, "VEL", "m/s")
+
+    def createMagfieldDatasets(self):
+        self.create3DDatasetForNameAndUnit(self.magfieldDatasets, "B_FIELD", "T")
+
+    def create3DDatasetForNameAndUnit(self, dataset, name, unitName):
+        """creates dataset of shape (len(blocks)* points/block + len(sinkpoints),)"""
         for i in range(1, 4):
-            self.velocityDatasets.append(
+            dataset.append(
                 self.file.create_dataset(
-                    f"GRID/columns/VEL{i}",
+                    f"GRID/columns/{name}{i}",
                     (self.nBlocks * self.gpPerBlock + self.nSinks),
                     dtype=np.float64,
                 )
             )
-            self.velocityDatasets[i - 1].attrs.create(
-                "CLASS", "COLUMN", dtype=nulltermStringType(7)
+            dataset[i - 1].attrs.create("CLASS", "COLUMN", dtype=nulltermStringType(7))
+            dataset[i - 1].attrs.create(
+                "COL_NAME", f"{name}{i}", dtype=nulltermStringType(len(name) + 2)
             )
-            self.velocityDatasets[i - 1].attrs.create(
-                "COL_NAME", f"VEL{i}", dtype=nulltermStringType(5)
-            )
-            self.velocityDatasets[i - 1].attrs.create(
-                "UNIT", "m/s", dtype=nulltermStringType(4)
+            dataset[i - 1].attrs.create(
+                "UNIT", f"{unitName}", dtype=nulltermStringType(len(unitName) + 1)
             )
 
     def createDensityDataset(self):
@@ -217,6 +209,7 @@ class LimeFile:
             self.writeGasTemperatures(block, iBlock)
             self.writeDustTemperatures(block, iBlock)
             self.writeVelocities(block, iBlock)
+            self.writeMagfield(block, iBlock)
 
             iBlock += 1
 
@@ -277,3 +270,15 @@ class LimeFile:
             self.velocityDatasets[2][
                 iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
             ] = block.velocities[:, 2]
+
+    def writeMagfield(self, block, iBlock):
+        if len(self.magfieldDatasets) > 0 and block.magfluxes is not None:
+            self.magfieldDatasets[0][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.magfluxes[:, 0]
+            self.magfieldDatasets[1][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.magfluxes[:, 1]
+            self.magfieldDatasets[2][
+                iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
+            ] = block.magfluxes[:, 2]
