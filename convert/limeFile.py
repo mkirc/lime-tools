@@ -45,13 +45,31 @@ class LimeFile:
         self.radius = radius
         self.minscale = minscale
         self.createLimeFileAttrs()
+    
+    def createLimeFileAttrs(self):
+        self.file.attrs.create("RADIUS  ", self.radius, dtype=np.float64)
+        self.file.attrs.create("MINSCALE", self.minscale, dtype=np.float64)
+        self.file.attrs.create("NSOLITER", 0, dtype=np.int32)
 
     def setupPrimaryGroups(self):
         self.createGridGroup()
         self.createColumsGroup()
 
+    def createGridGroup(self):
+        self.gridGroup = self.file.create_group("GRID")
+        self.gridGroup.attrs.create("CLASS", "HDU", dtype=nulltermStringType(4))
+        self.gridGroup.attrs.create("COLLPAR1", "H2", dtype=nulltermStringType(3))
+        self.gridGroup.attrs.create("EXTNAME", "GRID", dtype=nulltermStringType(5))
+        self.gridGroup.attrs.create("HDUNUM", 0, dtype=np.int32)
+
+    def createColumsGroup(self):
+        self.gridColumnsGroup = self.file.create_group("GRID/columns")
+        self.gridColumnsGroup.attrs.create(
+            "CLASS", "DATA_GROUP", dtype=nulltermStringType(11)
+        )
+
     def setupPoints(self, nBlocks, nSinks=0, gridpoints=True):
-        """needs to be called first. Number of Blocks and sinks need to be known"""
+    """needs to be called before property setups. Number of Blocks and sinks need to be known"""
         self.gpPerBlock = 512 if gridpoints else 1
         self.nBlocks = nBlocks
         self.nSinks = nSinks
@@ -59,7 +77,6 @@ class LimeFile:
         self.createPositionDatasets()
         self.createSinkDataset()
 
-        return self.positionDatasets, self.sinkDataset
 
     def setupDensity(self):
         self.setupPropertyDataset(self.createDensityDataset)
@@ -83,24 +100,6 @@ class LimeFile:
                 "No GRID/columns Group, run setupPointsAndSinks first."
             )
         return createFunction()
-
-    def createLimeFileAttrs(self):
-        self.file.attrs.create("RADIUS  ", self.radius, dtype=np.float64)
-        self.file.attrs.create("MINSCALE", self.minscale, dtype=np.float64)
-        self.file.attrs.create("NSOLITER", 0, dtype=np.int32)
-
-    def createGridGroup(self):
-        self.gridGroup = self.file.create_group("GRID")
-        self.gridGroup.attrs.create("CLASS", "HDU", dtype=nulltermStringType(4))
-        self.gridGroup.attrs.create("COLLPAR1", "H2", dtype=nulltermStringType(3))
-        self.gridGroup.attrs.create("EXTNAME", "GRID", dtype=nulltermStringType(5))
-        self.gridGroup.attrs.create("HDUNUM", 0, dtype=np.int32)
-
-    def createColumsGroup(self):
-        self.gridColumnsGroup = self.file.create_group("GRID/columns")
-        self.gridColumnsGroup.attrs.create(
-            "CLASS", "DATA_GROUP", dtype=nulltermStringType(11)
-        )
 
     def createIdDataset(self):
         self.idDataset = self.file.create_dataset(
@@ -248,7 +247,6 @@ class LimeFile:
             self.gasTemperatureDataset[
                 iBlock * self.gpPerBlock : (iBlock + 1) * self.gpPerBlock
             ] = block.temperatures[:]
-            # ] = [23] * self.gpPerBlock
 
     def writeDustTemperatures(self, block, iBlock):
         if (

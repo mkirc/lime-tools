@@ -10,6 +10,7 @@ class FlashFactory:
     def __init__(self, flash_file):
         self.file = flash_file
         self.bb = self.file["bounding box"]  # needs no get(), bb is required
+        self.densities = self.file.get("dens")
         self.temperatures = self.file.get("temp")
         self.dusttemperatures = self.file.get("tdus")
         self.refinementLevels = self.file.get("refine level")
@@ -32,9 +33,7 @@ class FlashFactory:
             self.file.get("magy"),
             self.file.get("magz"),
         )
-        self.densities = self.file.get("dens")
-        self.blocks = np.array(self.file["node type"])
-        self.leaves = np.where(self.blocks == 1)[0]  # node type == 1 -> leaf
+        self.leaves = np.where(np.array(self.file["node type"]) == 1)[0]
         self.gpIndices = np.meshgrid(
             *[range(nib) for nib in self.densities[0].shape], indexing="ij"
         )
@@ -48,14 +47,14 @@ class FlashFactory:
             blockId,
             self.gpIndices,
             self.bb[blockId],
-            self.temperaturesForBlock(blockId),
+            self.gastemperaturesForBlock(blockId),
             self.dusttemperaturesForBlock(blockId),
             self.densitiesForBlock(blockId),
             self.velocitiesForBlock(blockId),
             self.magfluxesForBlock(blockId),
         )
 
-    def temperaturesForBlock(self, blockId):
+    def gastemperaturesForBlock(self, blockId):
         try:
             return self.temperatures[blockId]
         except TypeError:
@@ -111,26 +110,28 @@ class FlashBlock:
             .T
         )
 
-    # temperatures(), dusttemperatures() and densities() all have the
-    # shape (512,)
     def temperatures(self, temperatures):
+        # returns array of shape (512,)
         if temperatures is not None:
             return temperatures.flatten(order="F")
 
     def dusttemperatures(self, dusttemperatures):
+        # returns array of shape (512,)
         if dusttemperatures is not None:
             return dusttemperatures.flatten(order="F")
 
     def densities(self, densities):
-        # we need to convert between g/cm^3 and N/m^3
+        # returns array of shape (512,)
+        # needs to convert between g/cm^3 and N/m^3
         if densities is not None:
             return densities.flatten(order="F") * self.moleculesPerGramH2
 
-    # velocities() and magfluxes() both have shape (512,3)
     def velocities(self, velocities):
+        # returns array of shape (512,3)
         if velocities is not None:
             return flatten3DValues(velocities[0], velocities[1], velocities[2])
 
     def magfluxes(self, magfluxes):
+        # returns array of shape (512,3)
         if magfluxes is not None:
             return flatten3DValues(magfluxes[0], magfluxes[1], magfluxes[2])
