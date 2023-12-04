@@ -45,7 +45,7 @@ class LimeFile:
         self.radius = radius
         self.minscale = minscale
         self.createLimeFileAttrs()
-    
+
     def createLimeFileAttrs(self):
         self.file.attrs.create("RADIUS  ", self.radius, dtype=np.float64)
         self.file.attrs.create("MINSCALE", self.minscale, dtype=np.float64)
@@ -69,14 +69,13 @@ class LimeFile:
         )
 
     def setupPoints(self, nBlocks, nSinks=0, gridpoints=True):
-    """needs to be called before property setups. Number of Blocks and sinks need to be known"""
+        """needs to be called before property setups. Number of Blocks and sinks need to be known"""
         self.gpPerBlock = 512 if gridpoints else 1
         self.nBlocks = nBlocks
         self.nSinks = nSinks
         self.createIdDataset()
         self.createPositionDatasets()
         self.createSinkDataset()
-
 
     def setupDensity(self):
         self.setupPropertyDataset(self.createDensityDataset)

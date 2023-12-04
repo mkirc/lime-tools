@@ -85,7 +85,9 @@ class FlashFactory:
 
 class FlashBlock:
     def __init__(self, blockId, gpIndices, bb, temp, tempdust, dens, vels, mags):
-        self.moleculesPerGramH2 = 2.987350e29 # 6.02214 * 10^23 / 2.01588 N/g * 1e6 cm^3/m
+        self.moleculesPerGramH2 = (
+            2.987350e29  # 6.02214 * 10^23 / 2.01588 N/g * 1e6 cm^3/m
+        )
 
         self.id = blockId
         self._Ix, self._Iy, self._Iz = gpIndices
