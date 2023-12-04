@@ -1,8 +1,51 @@
 import h5py
+import argparse
+import textwrap
 import numpy as np
 from h5py import string_dtype
 from h5py import Datatype
 from h5py.h5t import TypeID, STR_NULLTERM
+
+
+def createArgumentParser():
+    arg_parser = argparse.ArgumentParser(
+        description="Converts FLASH checkpoint files to valid LIME input.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(
+            """\
+        TODO
+        """
+        ),
+    )
+    arg_parser.add_argument(
+        "inFile",
+        metavar="FLASH file path",
+        type=str,
+        help="Path of FLASH checkpoint file",
+    )
+    arg_parser.add_argument(
+        "outFile", metavar="LIME file path", type=str, help="Path of LIME file"
+    )
+    arg_parser.add_argument(
+        "-b",
+        "--blocks",
+        type=int,
+        help="Number of FLASH leaf blocks to include. Defaults to all Blocks found in FLASH file.",
+    )
+    arg_parser.add_argument(
+        "-s",
+        "--sinks",
+        type=int,
+        help="Number of LIME sink points to include. Defaults to 1000",
+    )
+    arg_parser.add_argument(
+        "-r",
+        "--radscale",
+        type=float,
+        help="Scale factor to apply to radius of sink points. Defaults to 1",
+    )
+
+    return arg_parser
 
 
 def sampleSphere(npoints):
