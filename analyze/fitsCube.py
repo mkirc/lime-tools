@@ -11,7 +11,8 @@ from astropy.wcs import WCS
 from spectral_cube import SpectralCube
 
 outDir = pathlib.Path(__file__).parent.absolute() / 'out'
-inDir = pathlib.Path(__file__).parent.parent.parent.absolute() / 'wip' / 'models' / 'hdf5'
+inDir = pathlib.Path(__file__).parent.parent.parent.absolute() / 'wip' / 'models' / 'simACR'
+# inDir = pathlib.Path(__file__).parent.absolute() / 'in'
 
 def plotJanskyPerPixel():
 
@@ -24,10 +25,24 @@ def plotJanskyPerPixel():
     # cube = SpectralCube.read(file)
 
     image_hdu = file[0]
-    image_wcs = WCS(image_hdu)
+    try:
+        image_wcs = WCS(image_hdu)
+    except Exception:
+        image_wcs = None
 
     plotSpectralCube(image_hdu, image_wcs, 'jyPp.pdf')
     file.close()
+
+def plotSimpleFlashJyPP():
+
+    inDir = pathlib.Path(__file__).parent.absolute() / 'in'
+    file = fits.open(
+        str(inDir.joinpath(
+                'image_low_res_rfl9_cnt_0000_1362um_incl_0_phi_0_240000AU_64'
+                'pixel_jyPixel.fits')
+        ))
+
+    plotFlashCube(file[0])
 
 def plotOpticalDepth():
 
@@ -57,6 +72,21 @@ def plotKelvin():
     plotSpectralCube(image_hdu, image_wcs, 'kelvin.pdf')
     file.close()
 
+def plotFlashCube(imageHDU, name='JyPP-flash.pdf'):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    im = ax.imshow(imageHDU.data[0,:,:])
+    # Add a colorbar
+    cbar = plt.colorbar(im, pad=0.07)
+
+    # Add axes labels
+    ax.set_xlabel("Right Ascension", fontsize=14)
+    ax.set_ylabel("Declination", fontsize=14)
+
+    plt.savefig(str(outDir.joinpath(name)), bbox_inches="tight")
+
 def plotSpectralCube(imageHDU, projection, name="spec-quick.png"):
 
     fig = plt.figure()
@@ -76,9 +106,10 @@ def plotSpectralCube(imageHDU, projection, name="spec-quick.png"):
 
 if __name__ == "__main__":
 
-    plotJanskyPerPixel()
-    plotKelvin()
-    plotOpticalDepth()
+    # plotJanskyPerPixel()
+    plotSimpleFlashJyPP()
+    # plotKelvin()
+    # plotOpticalDepth()
 
 # Extract a single spectrum through the data cube
 # cube[:,50,50].quicklook('spec-quick.png')
